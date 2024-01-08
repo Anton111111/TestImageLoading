@@ -13,17 +13,27 @@ public class Test : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI _currentStateText;
 
+    private int _nextUrl = 0;
+
+    private List<string> _urls =
+        new()
+        {
+            "https://raw.githubusercontent.com/Anton111111/TestImageLoading/main/Assets/Images/banner1.png",
+            "https://raw.githubusercontent.com/Anton111111/TestImageLoading/main/Assets/Images/banner2.png",
+            "https://raw.githubusercontent.com/Anton111111/TestImageLoading/main/Assets/Images/banner3.png"
+        };
+
     void Start()
     {
-        StartCoroutine(Downloader());
+        StartCoroutine(ChangeImage());
     }
 
-    private IEnumerator Downloader()
+    private IEnumerator ChangeImage()
     {
-        var status = "";
-        UnityWebRequest www = UnityWebRequestTexture.GetTexture(
-            ""
-        );
+        var url = _urls[_nextUrl];
+        Debug.Log(">>>>" + url);
+        _nextUrl = (_nextUrl + 1 >= _urls.Count) ? 0 : _nextUrl + 1;
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
         yield return www.SendWebRequest();
         var texture = ((DownloadHandlerTexture)www.downloadHandler).texture;
         for (int i = 0; i < _images.Count; i++)
@@ -34,7 +44,6 @@ public class Test : MonoBehaviour
             switch (i)
             {
                 case 0:
-                nTexture.mipMpa
                     nTexture.filterMode = FilterMode.Trilinear;
                     nTexture.anisoLevel = 1;
                     break;
@@ -71,8 +80,9 @@ public class Test : MonoBehaviour
             nTexture.Apply();
             image.texture = nTexture;
         }
-        _currentStateText.text = status;
     }
+
+    private bool _pressed = false;
 
     private void Update()
     {
@@ -96,5 +106,17 @@ public class Test : MonoBehaviour
         }
 
         _currentStateText.text = status;
+
+        OVRInput.Update();
+        if (OVRInput.Get(OVRInput.Button.One) && !_pressed)
+        {
+            _pressed = true;
+            StartCoroutine(ChangeImage());
+        }
+
+        if (!OVRInput.Get(OVRInput.Button.One) && _pressed)
+        {
+            _pressed = false;
+        }
     }
 }
