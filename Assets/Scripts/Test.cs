@@ -18,8 +18,8 @@ public class Test : MonoBehaviour
     private List<string> _urls =
         new()
         {
-            "https://raw.githubusercontent.com/Anton111111/TestImageLoading/main/Assets/Images/banner1.png",
             "https://raw.githubusercontent.com/Anton111111/TestImageLoading/main/Assets/Images/banner2.png",
+            "https://raw.githubusercontent.com/Anton111111/TestImageLoading/main/Assets/Images/banner1.png",
             "https://raw.githubusercontent.com/Anton111111/TestImageLoading/main/Assets/Images/banner3.png"
         };
 
@@ -31,7 +31,6 @@ public class Test : MonoBehaviour
     private IEnumerator ChangeImage()
     {
         var url = _urls[_nextUrl];
-        Debug.Log(">>>>" + url);
         _nextUrl = (_nextUrl + 1 >= _urls.Count) ? 0 : _nextUrl + 1;
         UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
         yield return www.SendWebRequest();
@@ -39,8 +38,11 @@ public class Test : MonoBehaviour
         for (int i = 0; i < _images.Count; i++)
         {
             var image = _images[i];
+            //texture with mips
             var nTexture = new Texture2D(texture.width, texture.height, texture.format, true);
-            nTexture.SetPixelData(texture.GetRawTextureData<byte>(), 0);
+            //copy on the CPU
+            nTexture.LoadRawTextureData(texture.GetRawTextureData<byte>());
+            // dirty playing with settings ;)
             switch (i)
             {
                 case 0:
@@ -77,7 +79,8 @@ public class Test : MonoBehaviour
                     nTexture.anisoLevel = 1;
                     break;
             }
-            nTexture.Apply();
+            //copy to GPU and generate mips
+            nTexture.Apply(true, true);
             image.texture = nTexture;
         }
     }
